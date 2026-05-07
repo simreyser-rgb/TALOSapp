@@ -1,44 +1,86 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TALOS Premium</title>
     <script src="https://telegram.org"></script>
+    <!-- Подключаем графический движок -->
+    <script src="https://unpkg.com"></script>
     <style>
-        body { 
-            background: #0a0a0a; 
-            color: #00ff9d; 
-            font-family: sans-serif; 
-            text-align: center; 
-            padding: 20px;
-        }
-        .card {
-            border: 1px solid #00ff9d;
-            border-radius: 15px;
-            padding: 20px;
-            background: #111;
-            box-shadow: 0 0 15px rgba(0, 255, 157, 0.2);
-        }
-        h1 { color: #fff; }
-        .balance { font-size: 24px; margin: 10px 0; }
+        :root { --main-color: #007aff; --bg-color: #ffffff; --text-color: #000000; }
+        body { background: var(--bg-color); color: var(--text-color); font-family: -apple-system, sans-serif; margin: 0; padding: 15px; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .balance-card { background: #f2f2f7; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 20px; }
+        .balance-val { font-size: 28px; font-weight: bold; color: var(--main-color); }
+        
+        #chart { width: 100%; height: 300px; }
+        
+        .actions { display: flex; gap: 10px; margin-top: 20px; }
+        button { flex: 1; padding: 15px; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
+        .buy { background: #34c759; color: white; }
+        .sell { background: #ff3b30; color: white; }
+        button:active { transform: scale(0.95); opacity: 0.8; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>TALOS TERMINAL</h1>
-        <div class="balance">💰 Баланс: $10,000</div>
-        <hr color="#333">
-        <h2 id="asset-name">Загрузка актива...</h2>
-        <p>Система VADER готова к анализу</p>
+
+    <div class="header">
+        <b id="asset-name" style="font-size: 20px;">TALOS v5.2</b>
+        <span id="status" style="color: #8e8e93;">● Online</span>
+    </div>
+
+    <div class="balance-card">
+        <div style="font-size: 14px; color: #8e8e93;">Ваш баланс</div>
+        <div class="balance-val">$10,000.00</div>
+    </div>
+
+    <!-- Тот самый график -->
+    <div id="chart"></div>
+
+    <div class="actions">
+        <button class="buy" onclick="action('BUY')">КУПИТЬ</button>
+        <button class="sell" onclick="action('SELL')">ПРОДАТЬ</button>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
-        tg.expand(); // Раскрыть на весь экран
+        tg.expand();
+        tg.backgroundColor = '#ffffff';
 
-        // Получаем название акции из ссылки
         const params = new URLSearchParams(window.location.search);
         const symbol = params.get('symbol') || 'BTC';
-        document.getElementById('asset-name').innerText = "Актив: " + symbol;
+        document.getElementById('asset-name').innerText = symbol;
+
+        // Инициализация графика в светлой теме
+        const chart = LightweightCharts.createChart(document.getElementById('chart'), {
+            layout: { backgroundColor: '#ffffff', textColor: '#333' },
+            grid: { vertLines: { visible: false }, horzLines: { color: '#f0f0f0' } },
+            rightPriceScale: { borderVisible: false },
+            timeScale: { borderVisible: false },
+        });
+
+        const lineSeries = chart.addLineSeries({ 
+            color: '#007aff', 
+            lineWidth: 3,
+            priceFormat: { type: 'price', precision: 2, minMove: 0.01 },
+        });
+
+        // Эмуляция живых данных (можно заменить на реальное API)
+        let price = 50000;
+        const data = [];
+        for(let i=0; i<100; i++) {
+            price += (Math.random() - 0.5) * 100;
+            data.push({ time: 1715000000 + i * 3600, value: price });
+        }
+        lineSeries.setData(data);
+        chart.timeScale().fitContent();
+
+        function action(type) {
+            tg.HapticFeedback.impactOccurred('medium');
+            alert("Ордер " + type + " по активу " + symbol + " отправлен в обработку!");
+        }
     </script>
 </body>
 </html>
