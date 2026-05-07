@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <script src="https://telegram.org"></script>
+    <style>
+        body { 
+            background: #0a0a0a; 
+            color: #00ff9d; 
+            font-family: sans-serif; 
+            text-align: center; 
+            padding: 20px;
+        }
+        .card {
+            border: 1px solid #00ff9d;
+            border-radius: 15px;
+            padding: 20px;
+            background: #111;
+            box-shadow: 0 0 15px rgba(0, 255, 157, 0.2);
+        }
+        h1 { color: #fff; }
+        .balance { font-size: 24px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>TALOS TERMINAL</h1>
+        <div class="balance">💰 Баланс: $10,000</div>
+        <hr color="#333">
+        <h2 id="asset-name">Загрузка актива...</h2>
+        <p>Система VADER готова к анализу</p>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Раскрыть на весь экран
+
+        // Получаем название акции из ссылки
+        const params = new URLSearchParams(window.location.search);
+        const symbol = params.get('symbol') || 'BTC';
+        document.getElementById('asset-name').innerText = "Актив: " + symbol;
+    </script>
+</body>
+</html>
