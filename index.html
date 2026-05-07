@@ -1,82 +1,45 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TALOS Account</title>
     <script src="https://telegram.org"></script>
+    <script type="text/javascript" src="https://tradingview.com"></script>
     <style>
-        :root { --ios-blue: #007AFF; --ios-bg: #F2F2F7; }
-        body { background-color: var(--ios-bg); font-family: -apple-system, sans-serif; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; }
-        
-        /* Профиль пользователя */
-        .user-profile {
-            padding: 20px 16px; background: #fff; display: flex; align-items: center; gap: 12px;
-            border-bottom: 0.5px solid rgba(0,0,0,0.1);
-        }
-        .avatar { width: 45px; height: 45px; background: var(--ios-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; font-size: 20px; }
-        .user-info { display: flex; flex-direction: column; }
-        .user-name { font-weight: 700; font-size: 17px; }
-        .user-id { font-size: 12px; color: #8e8e93; }
-
-        .balance-section { padding: 20px 16px; background: #fff; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .balance-amount { font-size: 24px; font-weight: 800; color: var(--ios-blue); }
-
-        #chart-container { flex-grow: 1; margin: 15px; border-radius: 20px; overflow: hidden; background: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .footer { padding: 15px 15px 35px; display: flex; gap: 10px; background: #fff; border-top: 0.5px solid #eee; }
-        .btn { flex: 1; height: 50px; border: none; border-radius: 12px; font-weight: 600; color: #fff; }
+        body { background: #F2F2F7; font-family: -apple-system, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .header { padding: 20px 16px; background: rgba(255,255,255,0.8); backdrop-filter: blur(20px); display: flex; justify-content: space-between; align-items: center; border-bottom: 0.5px solid #d1d1d6; }
+        .user { display: flex; align-items: center; gap: 10px; }
+        .avatar { width: 38px; height: 38px; background: #007AFF; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .balance { font-weight: 700; color: #007AFF; background: #fff; padding: 6px 12px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        #chart { flex-grow: 1; margin: 12px; border-radius: 20px; overflow: hidden; background: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .btns { padding: 15px 15px 35px; display: flex; gap: 10px; background: #fff; border-top: 0.5px solid #d1d1d6; }
+        .btn { flex: 1; height: 50px; border: none; border-radius: 12px; font-weight: 600; color: #fff; font-size: 16px; }
     </style>
 </head>
 <body>
-
-<div class="user-profile">
-    <div class="avatar" id="user-avatar">?</div>
-    <div class="user-info">
-        <div class="user-name" id="user-name">Загрузка...</div>
-        <div class="user-id" id="user-id">ID: 00000000</div>
+    <div class="header">
+        <div class="user">
+            <div class="avatar" id="pic">?</div>
+            <div id="name" style="font-weight: 600;">Account</div>
+        </div>
+        <div class="balance">$10,000.00</div>
     </div>
-</div>
-
-<div class="balance-section">
-    <span>Ваш Демо-счет</span>
-    <div class="balance-amount">$10,000.00</div>
-</div>
-
-<div id="chart-container">
-    <div id="tv-widget" style="height: 100%;"></div>
-</div>
-
-<div class="footer">
-    <button class="btn" style="background: #34C759;" onclick="tg.showAlert('Сделка открыта!')">КУПИТЬ</button>
-    <button class="btn" style="background: #FF3B30;" onclick="tg.showAlert('Сделка открыта!')">ПРОДАТЬ</button>
-</div>
-
-<script type="text/javascript" src="https://tradingview.com"></script>
-<script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-
-    // ПОЛУЧАЕМ ДАННЫЕ ИЗ TELEGRAM
-    const user = tg.initDataUnsafe?.user;
-    if (user) {
-        document.getElementById('user-name').innerText = user.first_name + (user.last_name ? ' ' + user.last_name : '');
-        document.getElementById('user-id').innerText = "ID: " + user.id;
-        document.getElementById('user-avatar').innerText = user.first_name[0];
-    }
-
-    const params = new URLSearchParams(window.location.search);
-    const sym = params.get('symbol') || 'BINANCE:BTCUSDT';
-
-    new TradingView.widget({
-        "autosize": true,
-        "symbol": sym,
-        "interval": "60",
-        "theme": "light",
-        "style": "1",
-        "locale": "ru",
-        "container_id": "tv-widget",
-        "hide_top_toolbar": true
-    });
-</script>
+    <div id="chart"><div id="tv" style="height: 100%;"></div></div>
+    <div class="btns">
+        <button class="btn" style="background: #34C759;" onclick="tg.showAlert('Ордер исполнен ✅')">КУПИТЬ</button>
+        <button class="btn" style="background: #FF3B30;" onclick="tg.showAlert('Ордер исполнен ✅')">ПРОДАТЬ</button>
+    </div>
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        const user = tg.initDataUnsafe?.user;
+        if (user) {
+            document.getElementById('name').innerText = user.first_name;
+            document.getElementById('pic').innerText = user.first_name.charAt(0).toUpperCase();
+        }
+        const params = new URLSearchParams(window.location.search);
+        const sym = params.get('symbol') || 'BINANCE:BTCUSDT';
+        new TradingView.widget({ "autosize": true, "symbol": sym, "interval": "60", "theme": "light", "style": "1", "locale": "ru", "container_id": "tv", "hide_top_toolbar": true });
+    </script>
 </body>
 </html>
