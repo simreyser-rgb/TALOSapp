@@ -2,85 +2,127 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TALOS Premium</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TALOS Terminal iOS</title>
     <script src="https://telegram.org"></script>
-    <!-- Подключаем графический движок -->
-    <script src="https://unpkg.com"></script>
     <style>
-        :root { --main-color: #007aff; --bg-color: #ffffff; --text-color: #000000; }
-        body { background: var(--bg-color); color: var(--text-color); font-family: -apple-system, sans-serif; margin: 0; padding: 15px; }
+        :root {
+            --ios-blue: #007AFF;
+            --ios-bg: #F2F2F7;
+            --ios-card: #FFFFFF;
+            --ios-green: #34C759;
+            --ios-red: #FF3B30;
+        }
         
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .balance-card { background: #f2f2f7; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 20px; }
-        .balance-val { font-size: 28px; font-weight: bold; color: var(--main-color); }
-        
-        #chart { width: 100%; height: 300px; }
-        
-        .actions { display: flex; gap: 10px; margin-top: 20px; }
-        button { flex: 1; padding: 15px; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
-        .buy { background: #34c759; color: white; }
-        .sell { background: #ff3b30; color: white; }
-        button:active { transform: scale(0.95); opacity: 0.8; }
+        body { 
+            background-color: var(--ios-bg); 
+            color: #000; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column;
+            -webkit-user-select: none;
+        }
+
+        .ios-header {
+            padding: 20px 16px 10px 16px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            position: sticky; top: 0; z-index: 100;
+            display: flex; justify-content: space-between; align-items: flex-end;
+        }
+
+        .title-group h1 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+        .title-group span { font-size: 13px; color: #8E8E93; font-weight: 500; }
+
+        .balance-chip {
+            background: var(--ios-card);
+            padding: 8px 12px;
+            border-radius: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            font-weight: 600; font-size: 15px; color: var(--ios-blue);
+        }
+
+        #chart-container {
+            flex-grow: 1;
+            margin: 12px 16px;
+            border-radius: 20px;
+            overflow: hidden;
+            background: var(--ios-card);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            border: 0.5px solid rgba(0,0,0,0.1);
+        }
+
+        .ios-actions {
+            padding: 16px 16px 34px 16px; /* 34px снизу для Safe Area iPhone */
+            display: flex; gap: 12px; background: var(--ios-card);
+            border-top: 0.5px solid rgba(0,0,0,0.1);
+        }
+
+        .btn {
+            flex: 1; height: 50px; border: none; border-radius: 12px;
+            font-size: 17px; font-weight: 600; letter-spacing: -0.4px;
+            transition: all 0.2s ease; cursor: pointer;
+        }
+
+        .btn-buy { background-color: var(--ios-green); color: white; }
+        .btn-sell { background-color: var(--ios-red); color: white; }
+        .btn:active { transform: scale(0.96); opacity: 0.8; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <b id="asset-name" style="font-size: 20px;">TALOS v5.2</b>
-        <span id="status" style="color: #8e8e93;">● Online</span>
+    <div class="ios-header">
+        <div class="title-group">
+            <span id="date-label">РЫНОК ТАЛОС</span>
+            <h1 id="ticker-name">BTC</h1>
+        </div>
+        <div class="balance-chip">
+            $10,000.00
+        </div>
     </div>
 
-    <div class="balance-card">
-        <div style="font-size: 14px; color: #8e8e93;">Ваш баланс</div>
-        <div class="balance-val">$10,000.00</div>
+    <div id="chart-container"></div>
+
+    <div class="ios-actions">
+        <button class="btn btn-buy" onclick="handleTrade('BUY')">Купить</button>
+        <button class="btn btn-sell" onclick="handleTrade('Продать')">Продать</button>
     </div>
 
-    <!-- Тот самый график -->
-    <div id="chart"></div>
-
-    <div class="actions">
-        <button class="buy" onclick="action('BUY')">КУПИТЬ</button>
-        <button class="sell" onclick="action('SELL')">ПРОДАТЬ</button>
-    </div>
-
+    <script type="text/javascript" src="https://tradingview.com"></script>
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        tg.backgroundColor = '#ffffff';
+        tg.headerColor = '#F2F2F7';
 
         const params = new URLSearchParams(window.location.search);
-        const symbol = params.get('symbol') || 'BTC';
-        document.getElementById('asset-name').innerText = symbol;
+        const symbol = params.get('symbol') || 'BTCUSDT';
+        document.getElementById('ticker-name').innerText = symbol;
 
-        // Инициализация графика в светлой теме
-        const chart = LightweightCharts.createChart(document.getElementById('chart'), {
-            layout: { backgroundColor: '#ffffff', textColor: '#333' },
-            grid: { vertLines: { visible: false }, horzLines: { color: '#f0f0f0' } },
-            rightPriceScale: { borderVisible: false },
-            timeScale: { borderVisible: false },
+        // Авто-биржа
+        const moex = ["SBER", "GAZP", "YNDX", "LKOH", "ALRS", "GMKN", "TCSG", "FLOT"];
+        let ex = moex.includes(symbol) ? "MOEX:" : (["BTC", "ETH", "SOL", "DOGE"].some(s => symbol.includes(s)) ? "BINANCE:" : "NASDAQ:");
+        
+        new TradingView.widget({
+            "autosize": true,
+            "symbol": ex + symbol,
+            "interval": "60",
+            "theme": "light",
+            "style": "1",
+            "locale": "ru",
+            "container_id": "chart-container",
+            "hide_top_toolbar": true,
+            "hide_legend": true,
+            "save_image": false,
+            "backgroundColor": "#ffffff"
         });
 
-        const lineSeries = chart.addLineSeries({ 
-            color: '#007aff', 
-            lineWidth: 3,
-            priceFormat: { type: 'price', precision: 2, minMove: 0.01 },
-        });
-
-        // Эмуляция живых данных (можно заменить на реальное API)
-        let price = 50000;
-        const data = [];
-        for(let i=0; i<100; i++) {
-            price += (Math.random() - 0.5) * 100;
-            data.push({ time: 1715000000 + i * 3600, value: price });
-        }
-        lineSeries.setData(data);
-        chart.timeScale().fitContent();
-
-        function action(type) {
+        function handleTrade(type) {
             tg.HapticFeedback.impactOccurred('medium');
-            alert("Ордер " + type + " по активу " + symbol + " отправлен в обработку!");
+            tg.showConfirm(`Подтвердить ордер: ${type} ${symbol}?`, (ok) => {
+                if(ok) tg.showAlert("Ордер успешно отправлен!");
+            });
         }
     </script>
 </body>
 </html>
+
