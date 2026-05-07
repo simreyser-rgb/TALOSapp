@@ -1,45 +1,117 @@
-<!DOCTYPE html>
-<html>
+<!DOCTYPE html><!DOCTYPE html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TALOS Intelligence</title>
+    <!-- Подключаем Telegram SDK -->
     <script src="https://telegram.org"></script>
-    <script type="text/javascript" src="https://tradingview.com"></script>
     <style>
-        body { background: #F2F2F7; font-family: -apple-system, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        .header { padding: 20px 16px; background: rgba(255,255,255,0.8); backdrop-filter: blur(20px); display: flex; justify-content: space-between; align-items: center; border-bottom: 0.5px solid #d1d1d6; }
-        .user { display: flex; align-items: center; gap: 10px; }
-        .avatar { width: 38px; height: 38px; background: #007AFF; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        .balance { font-weight: 700; color: #007AFF; background: #fff; padding: 6px 12px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        #chart { flex-grow: 1; margin: 12px; border-radius: 20px; overflow: hidden; background: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .btns { padding: 15px 15px 35px; display: flex; gap: 10px; background: #fff; border-top: 0.5px solid #d1d1d6; }
-        .btn { flex: 1; height: 50px; border: none; border-radius: 12px; font-weight: 600; color: #fff; font-size: 16px; }
+        :root { --ios-blue: #007AFF; --ios-bg: #F2F2F7; }
+        body { 
+            background-color: var(--ios-bg); 
+            font-family: -apple-system, system-ui, sans-serif;
+            margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column;
+            overflow: hidden;
+        }
+        /* Шапка аккаунта */
+        .ios-header {
+            padding: 20px 16px; background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-bottom: 0.5px solid rgba(0,0,0,0.1);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .user-info { display: flex; align-items: center; gap: 12px; }
+        .avatar { 
+            width: 40px; height: 40px; background: var(--ios-blue); 
+            border-radius: 50%; color: #fff; display: flex; 
+            align-items: center; justify-content: center; font-weight: 800; 
+        }
+        .balance-chip {
+            background: #fff; padding: 8px 12px; border-radius: 20px;
+            font-weight: 700; color: var(--ios-blue); box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        /* Контейнер для графика */
+        #chart-viewport {
+            flex-grow: 1; margin: 12px; border-radius: 24px;
+            background: #fff; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 0.5px solid rgba(0,0,0,0.1);
+        }
+        /* Кнопки действий */
+        .ios-footer {
+            padding: 16px 16px 35px 16px; background: #fff;
+            display: flex; gap: 12px; border-top: 0.5px solid rgba(0,0,0,0.1);
+        }
+        .btn {
+            flex: 1; height: 54px; border: none; border-radius: 14px;
+            font-size: 17px; font-weight: 600; cursor: pointer; transition: 0.2s;
+        }
+        .buy { background: #34C759; color: #fff; }
+        .sell { background: #FF3B30; color: #fff; }
+        .btn:active { transform: scale(0.96); opacity: 0.8; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="user">
-            <div class="avatar" id="pic">?</div>
-            <div id="name" style="font-weight: 600;">Account</div>
+
+<div class="ios-header">
+    <div class="user-info">
+        <div class="avatar" id="u-pic">?</div>
+        <div>
+            <div id="u-name" style="font-weight: 700;">Account</div>
+            <div id="u-id" style="font-size: 11px; color: #8E8E93;">ID: 000000</div>
         </div>
-        <div class="balance">$10,000.00</div>
     </div>
-    <div id="chart"><div id="tv" style="height: 100%;"></div></div>
-    <div class="btns">
-        <button class="btn" style="background: #34C759;" onclick="tg.showAlert('Ордер исполнен ✅')">КУПИТЬ</button>
-        <button class="btn" style="background: #FF3B30;" onclick="tg.showAlert('Ордер исполнен ✅')">ПРОДАТЬ</button>
-    </div>
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        const user = tg.initDataUnsafe?.user;
-        if (user) {
-            document.getElementById('name').innerText = user.first_name;
-            document.getElementById('pic').innerText = user.first_name.charAt(0).toUpperCase();
-        }
-        const params = new URLSearchParams(window.location.search);
-        const sym = params.get('symbol') || 'BINANCE:BTCUSDT';
-        new TradingView.widget({ "autosize": true, "symbol": sym, "interval": "60", "theme": "light", "style": "1", "locale": "ru", "container_id": "tv", "hide_top_toolbar": true });
-    </script>
+    <div class="balance-chip">$10,000.00</div>
+</div>
+
+<div id="chart-viewport">
+    <div id="tradingview_widget" style="height: 100%;"></div>
+</div>
+
+<div class="ios-footer">
+    <button class="btn sell" onclick="doTrade('Продажа')">Продать</button>
+    <button class="btn buy" onclick="doTrade('Покупка')">Купить</button>
+</div>
+
+<!-- БИБЛИОТЕКА ГРАФИКОВ (Критически важно!) -->
+<script type="text/javascript" src="https://tradingview.com"></script>
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    // 1. Привязка учетной записи
+    const user = tg.initDataUnsafe?.user;
+    if (user) {
+        document.getElementById('u-name').innerText = user.first_name;
+        document.getElementById('u-id').innerText = "ID: " + user.id;
+        document.getElementById('u-pic').innerText = user.first_name.charAt(0).toUpperCase();
+    }
+
+    // 2. Получение тикера из бота
+    const params = new URLSearchParams(window.location.search);
+    const sym = params.get('symbol') || 'BINANCE:BTCUSDT';
+
+    // 3. Создание живого графика
+    new TradingView.widget({
+        "autosize": true,
+        "symbol": sym,
+        "interval": "60",
+        "timezone": "Etc/UTC",
+        "theme": "light",
+        "style": "1",
+        "locale": "ru",
+        "toolbar_bg": "#f1f3f6",
+        "enable_publishing": false,
+        "hide_top_toolbar": true,
+        "container_id": "tradingview_widget"
+    });
+
+    function doTrade(type) {
+        tg.HapticFeedback.impactOccurred('medium');
+        tg.showConfirm(`Подтвердить операцию: ${type}?`, (ok) => {
+            if(ok) tg.showAlert("✅ Сделка успешно исполнена!");
+        });
+    }
+</script>
 </body>
 </html>
