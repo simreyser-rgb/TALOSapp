@@ -6,45 +6,32 @@
     <script src="https://telegram.org"></script>
     <script type="text/javascript" src="https://tradingview.com"></script>
     <style>
-        body { background: #F2F2F7; font-family: -apple-system, sans-serif; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        .header { padding: 15px; background: #fff; border-bottom: 0.5px solid #ccc; display: flex; justify-content: space-between; align-items: center; }
-        #chart { flex-grow: 1; margin: 10px; border-radius: 15px; overflow: hidden; background: #fff; border: 1px solid #ddd; }
-        .footer { padding: 15px 15px 35px; display: flex; gap: 10px; background: #fff; }
-        .btn { flex: 1; height: 50px; border: none; border-radius: 12px; font-weight: bold; color: #fff; font-size: 16px; }
+        body { background: #F2F2F7; font-family: -apple-system, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .ios-header { padding: 20px 16px; background: rgba(255,255,255,0.8); backdrop-filter: blur(20px); border-bottom: 0.5px solid #d1d1d6; display: flex; justify-content: space-between; align-items: center; }
+        .balance { background: #fff; padding: 8px 12px; border-radius: 20px; color: #007AFF; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        #chart-box { flex-grow: 1; margin: 12px; border-radius: 20px; overflow: hidden; background: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .footer { padding: 16px 16px 35px; display: flex; gap: 12px; background: #fff; border-top: 0.5px solid #d1d1d6; }
+        .btn { flex: 1; height: 50px; border: none; border-radius: 14px; font-size: 17px; font-weight: 600; color: #fff; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div id="u-name" style="font-weight: bold;">TALOS USER</div>
-        <div style="color: #007AFF; font-weight: bold;">$10,000</div>
+    <div class="ios-header">
+        <h1 id="ticker" style="margin:0; font-size: 28px; font-weight: 800;">BTC</h1>
+        <div class="balance">$10,000.00</div>
     </div>
-    <div id="chart"><div id="tv" style="height: 100%;"></div></div>
+    <div id="chart-box"><div id="tv-widget" style="height: 100%;"></div></div>
     <div class="footer">
-        <button class="btn" style="background: #34C759;" onclick="window.Telegram.WebApp.showAlert('Сделка открыта!')">КУПИТЬ</button>
-        <button class="btn" style="background: #FF3B30;" onclick="window.Telegram.WebApp.close()">ЗАКРЫТЬ</button>
+        <button class="btn" style="background:#FF3B30;" onclick="tg.close()">Закрыть</button>
+        <button class="btn" style="background:#34C759;" onclick="tg.showAlert('Сделка открыта ✅')">Купить</button>
     </div>
     <script>
         const tg = window.Telegram.WebApp;
-        tg.ready(); // ЭТО САМАЯ ВАЖНАЯ СТРОКА
+        tg.ready(); // <--- САМАЯ ВАЖНАЯ СТРОКА ДЛЯ УДАЛЕНИЯ СЕРОГО ЭКРАНА
         tg.expand();
-
         const params = new URLSearchParams(window.location.search);
         const sym = params.get('symbol') || 'BINANCE:BTCUSDT';
-        
-        if (tg.initDataUnsafe?.user) {
-            document.getElementById('u-name').innerText = tg.initDataUnsafe.user.first_name;
-        }
-
-        new TradingView.widget({
-            "autosize": true,
-            "symbol": sym,
-            "interval": "60",
-            "theme": "light",
-            "style": "1",
-            "locale": "ru",
-            "container_id": "tv",
-            "hide_top_toolbar": true
-        });
+        document.getElementById('ticker').innerText = sym.split(':')[1] || sym;
+        new TradingView.widget({ "autosize": true, "symbol": sym, "interval": "60", "theme": "light", "style": "1", "locale": "ru", "container_id": "tv-widget", "hide_top_toolbar": true });
     </script>
 </body>
 </html>
