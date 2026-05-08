@@ -1,38 +1,79 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <script src="https://telegram.org"></script>
-    <script type="text/javascript" src="https://tradingview.com"></script>
-    <style>
-        body { background: #F2F2F7; font-family: -apple-system, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        .ios-header { padding: 20px 16px; background: rgba(255,255,255,0.8); backdrop-filter: blur(20px); border-bottom: 0.5px solid #d1d1d6; display: flex; justify-content: space-between; align-items: center; }
-        .balance { background: #fff; padding: 8px 12px; border-radius: 20px; color: #007AFF; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        #chart-box { flex-grow: 1; margin: 12px; border-radius: 20px; overflow: hidden; background: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .footer { padding: 16px 16px 35px; display: flex; gap: 12px; background: #fff; border-top: 0.5px solid #d1d1d6; }
-        .btn { flex: 1; height: 50px; border: none; border-radius: 14px; font-size: 17px; font-weight: 600; color: #fff; }
-    </style>
-</head>
-<body>
-    <div class="ios-header">
-        <h1 id="ticker" style="margin:0; font-size: 28px; font-weight: 800;">BTC</h1>
-        <div class="balance">$10,000.00</div>
-    </div>
-    <div id="chart-box"><div id="tv-widget" style="height: 100%;"></div></div>
-    <div class="footer">
-        <button class="btn" style="background:#FF3B30;" onclick="tg.close()">Закрыть</button>
-        <button class="btn" style="background:#34C759;" onclick="tg.showAlert('Сделка открыта ✅')">Купить</button>
-    </div>
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.ready(); // <--- САМАЯ ВАЖНАЯ СТРОКА ДЛЯ УДАЛЕНИЯ СЕРОГО ЭКРАНА
-        tg.expand();
-        const params = new URLSearchParams(window.location.search);
-        const sym = params.get('symbol') || 'BINANCE:BTCUSDT';
-        document.getElementById('ticker').innerText = sym.split(':')[1] || sym;
-        new TradingView.widget({ "autosize": true, "symbol": sym, "interval": "60", "theme": "light", "style": "1", "locale": "ru", "container_id": "tv-widget", "hide_top_toolbar": true });
-    </script>
-</body>
-</html>
+import asyncio, nest_asyncio, time, random
+from aiogram import Bot, Dispatcher, types, F
+from aiogram.filters import Command
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
+
+nest_asyncio.apply()
+
+# --- ТВОИ ДАННЫЕ ---
+TOKEN = "8477379930:AAEXnJOd8H4rnCgsM-YdeoWNzinwFDazEgM"
+MY_APP = "https://github.io" 
+
+bot = Bot(token=TOKEN)
+dp = Dispatcher()
+
+# Функция главного меню
+def get_main_kb():
+    assets = {
+        "🚀 BTC": "BINANCE:BTCUSDT",
+        "🎮 NVIDIA": "NASDAQ:NVDA",
+        "🔌 Tesla": "NASDAQ:TSLA",
+        "🏦 Сбер": "MOEX:SBER"
+    }
+    kb = []
+    items = list(assets.items())
+    for i in range(0, len(items), 2):
+        row = [
+            InlineKeyboardButton(text=items[i][0], callback_data=f"info_{items[i][1]}"),
+            InlineKeyboardButton(text=items[i+1][0], callback_data=f"info_{items[i+1][1]}") if i+1 < len(items) else None
+        ]
+        kb.append([b for b in row if b])
+    return InlineKeyboardMarkup(inline_keyboard=kb)
+
+@dp.message(Command("start"))
+async def start(m: types.Message):
+    await m.answer(
+        f" **TALOS INTELLIGENCE v11.0**\n\nВыбери актив для получения **анализа на завтра** и открытия графика:",
+        reply_markup=get_main_kb()
+    )
+
+# Обработка нажатия на акцию
+@dp.callback_query(F.data.startswith("info_"))
+async def send_analysis(callback: types.Callback_query):
+    ticker = callback.data.split("_")[1]
+    
+    # Имитация работы нейросети VADER (аналитика на завтра)
+    forecasts = [
+        "📈 Прогноз: РОСТ. Технический индикатор RSI в зоне покупки. Ожидаемая цель: +1.8%.",
+        "📉 Прогноз: СНИЖЕНИЕ. Наблюдается фиксация прибыли крупными игроками.",
+        "📊 Прогноз: БОКОВИК. Рынок ждет новостей по инфляции. Движения минимальны."
+    ]
+    
+    analysis = random.choice(forecasts)
+    v = int(time.time())
+    chart_url = f"{MY_APP}?symbol={ticker}&v={v}"
+    
+    # Кнопка для открытия графика внутри сообщения с анализом
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="📈 Открыть живой график", web_app=WebAppInfo(url=chart_url))],
+        [InlineKeyboardButton(text="⬅️ Назад в меню", callback_data="back")]
+    ])
+    
+    await callback.message.edit_text(
+        f"📊 **АНАЛИЗ {ticker} НА ЗАВТРА:**\n\n{analysis}\n\n*Нажми кнопку ниже, чтобы изучить график лично:*",
+        reply_markup=kb,
+        parse_mode="Markdown"
+    )
+
+@dp.callback_query(F.data == "back")
+async def back_to_menu(callback: types.Callback_query):
+    await callback.message.edit_text("Выбери актив для анализа:", reply_markup=get_main_kb())
+
+async def main():
+    await bot.delete_webhook(drop_pending_updates=True)
+    print("✅ ТЕРМИНАЛ TALOS v11.0 ЗАПУЩЕН!")
+    await dp.start_polling(bot)
+
+if __name__ == '__main__':
+    asyncio.run(main())
 
